@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+
+        font-family: Georgia, "Times New Roman", Times, serif;
+      }
+      .container {
+        height: 100vh;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        background-color: #333;
+      }
+      h1 {
+        padding: 10px;
+        border-bottom: 2px solid #f0f0f0;
+        margin-bottom: 10px;
+        text-align: center;
+        color: #fff;
+      }
+      p {
+        margin-bottom: 20px;
+        letter-spacing: 2px;
+        padding: 10px;
+        font-size: 25px;
+        color: #fff;
+      }
+      .board {
+        display: grid;
+        width: 300px;
+        height: 300px;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+        margin: 10px auto 10px auto;
+      }
+      .cell {
+        width: 100px;
+        height: 100px;
+        border: 2px solid black;
+        margin: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2em;
+        cursor: pointer;
+        background-color: rgb(190, 197, 204);
+        transition: background-color 0.5s ease-out;
+      }
+      .cell:hover {
+        background-color: #f0f0f0;
+      }
+      .btn {
+        margin: 50px;
+      }
+      .resets {
+        padding: 15px 10px;
+        margin: 10px;
+        font-size: 1.5em;
+        font-family: Arial, Helvetica, sans-serif;
+        border: none;
+        background-color: hsla(0, 55%, 59%, 0.434);
+        color: rgb(200, 210, 210);
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      .resets:hover {
+        background-color: #bc4444ee;
+      }
+
+      @media (max-width: 480px) {
+        /* For screens 480px or smaller, these rules will override the ones above */
+
+        .board {
+          /* Override the fixed width and height */
+          width: 90vw; /* Use 90% of the viewport width */
+          height: 90vw; /* Keep it square */
+        }
+
+        .cell {
+          /* We can remove the fixed width/height because the grid handles it */
+          width: auto;
+          height: auto;
+          margin: 2px; /* A smaller margin for smaller screens */
+          font-size: 1.5em; /* Make the X and O smaller */
+        }
+
+        h1 {
+          font-size: 1.8em; /* Make text smaller */
+        }
+
+        p {
+          font-size: 1.2em; /* Make text smaller */
+        }
+
+        .resets {
+          padding: 10px 8px;
+          font-size: 1.2em;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>tic-tac-toe</h1>
+      <p id="player">Player's X turn</p>
+      <div class="board" id="gameboard">
+        <div class="cell" data-cell-index="0"></div>
+        <div class="cell" data-cell-index="1"></div>
+        <div class="cell" data-cell-index="2"></div>
+        <div class="cell" data-cell-index="3"></div>
+        <div class="cell" data-cell-index="4"></div>
+        <div class="cell" data-cell-index="5"></div>
+        <div class="cell" data-cell-index="6"></div>
+        <div class="cell" data-cell-index="7"></div>
+        <div class="cell" data-cell-index="8"></div>
+      </div>
+      <div class="btn">
+        <button class="resets">Reset-game</button>
+      </div>
+    </div>
+
+    <script>
+      //select the required element
+      const board = document.getElementById("gameboard");
+      const btn = document.querySelector(".resets");
+      const score = document.getElementById("player");
+      const cells = document.querySelectorAll(".cell");
+
+      //make game variable
+      let currentplayer = "X"; //x always start the game
+      let gameactive = true; // The game is active when it starts. We'll set this to false when someone wins or it's a draw.
+
+      let arr = ["", "", "", "", "", "", "", "", ""]; //// We will update this array as players make their moves.
+
+      //winning condition
+      const condition = [
+        ["0", "1", "2"],
+        ["3", "4", "5"],
+        ["6", "7", "8"],
+        ["0", "3", "6"],
+        ["2", "5", "8"],
+        ["1", "4", "7"],
+        ["0", "4", "8"],
+        ["2", "4", "6"],
+      ];
+
+      //functions
+      function handlegame(playerclick, playerclickindex) {
+        arr[playerclickindex] = currentplayer; //update the array
+        playerclick.innerHTML = currentplayer; //Update the UI to show the current player's mark.
+      }
+      //change the player's turn
+      function playerturn() {
+        if (currentplayer === "X") {
+          currentplayer = "O";
+          score.innerHTML = `Player's O turn`;
+        } else if (currentplayer == "O") {
+          currentplayer = "X";
+          score.innerHTML = `Player's X turn`;
+        }
+      }
+      //This function checks if the game has been won, is a draw, or should continue.
+      function handelresult() {
+        let roundWon = false;
+        let a, b, c;
+        for (let i = 0; i < condition.length; i++) {
+          const wincondition = condition[i];
+          // Get the values of the three cells in the current win conditon
+          a = arr[wincondition[0]];
+          b = arr[wincondition[1]];
+          c = arr[wincondition[2]];
+          console.log(a, b, c);
+          // If any of the cells are empty, this can't be a winning line, so we continue.
+
+          if (a === "" || b === "" || c === "") {
+            continue;
+          }
+          // If all three cells have the same value ('X' or 'O'), we have a winner.
+          if (a === b && b === c) {
+            roundWon = true;
+            break; // Exit the loop since we found a winner.
+          }
+        }
+        if (roundWon) {
+          if (a == "X" && b == "X" && c == "X") {
+            score.innerHTML = `Player X has won `;
+          } else if (a == "O" && b == "O" && c == "O") {
+            score.innerHTML = `Player O has won `;
+          }
+          confetti({
+            particleCount: 150,
+            spread: 180,
+          });
+          gameactive = false;
+          setTimeout(() => {
+            //if you are using settimeout then remove return
+            reset();
+          }, 2000);
+          return; // Stop the function here i.e. for handleresult  ,When a return statement is reached, the current function it is inside immediately stops, and any code within that function that comes after the return statement will not run ,The key clarification is that it only stops the current function. The rest of your program continues to run.
+
+          //break stops a loop.
+          //return stops a function..
+        }
+
+        // Check if the board is full (no more empty strings in our arr).
+        let roundDraw = !arr.includes(""); //.include return true and false
+        //If there is at least one empty cell, this will be true.
+        //If all cells are filled (no empty strings), this will be false.
+        //there is not operator which will make true to false and false to true
+        if (roundDraw) {
+          score.innerHTML = `Game has Draw`;
+          gameactive = false;
+          return; // Stop the function here.
+        }
+        // If we get here, no one has won and the game is not a draw, so we switch players.
+        playerturn();
+      }
+
+      function cellclick(e) {
+        const playerclick = e.target; // // Get the actual HTML element that was clicked.
+        const playerclickindex = parseInt(
+          playerclick.getAttribute("data-cell-index")
+        );
+        // parseInt converts the string "0", "1", etc., into a number.
+
+        // If either is true, we do nothing. This is called a "guard clause".
+        if (arr[playerclickindex] !== "" || !gameactive) {
+          return;
+        }
+        handlegame(playerclick, playerclickindex);
+        handelresult();
+      }
+
+      function reset() {
+        gameactive = true;
+        currentplayer = "X";
+        score.innerHTML = `Player's X turn`;
+        arr = ["", "", "", "", "", "", "", "", ""];
+        cells.forEach((cell) => {
+          cell.innerHTML = "";
+        });
+      }
+
+      cells.forEach((cell) => {
+        cell.addEventListener("click", cellclick);
+      });
+      btn.addEventListener("click", reset);
+    </script>
+  </body>
+</html>
